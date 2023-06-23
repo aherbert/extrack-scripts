@@ -296,7 +296,7 @@ def parse_args():
   parser.add_argument('--workers', dest='workers', type=int,
     default=os.cpu_count(),
     help='number of workers (default: %(default)s)')
-  parser.add_argument('--dt', dest='dt', type=float, default=0.3,
+  parser.add_argument('--dt', dest='dt', type=float, default=0.01,
     help='frame exposure time (default: %(default)s)')
   parser.add_argument('--nb-states', dest='nb_states', type=int, default=2,
     help='number of states (default: %(default)s)')
