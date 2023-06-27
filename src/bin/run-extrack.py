@@ -315,7 +315,7 @@ def parse_args():
 
   group = parser.add_argument_group('Data')
   group.add_argument('--lengths', dest='lengths', nargs=2, type=int,
-    default=[1, 500],
+    default=[2, 500],
     help='track lengths loaded (default: %(default)s)')
   group.add_argument('--dist-threshold', dest='dist_th', type=float,
     default=0.4,
