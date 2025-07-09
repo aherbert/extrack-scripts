@@ -47,7 +47,7 @@ def process_tracks(path, args):
 
   # Load data
   all_tracks, frames, opt_metrics = extrack.readers.read_table(path,
-    # Note: Read all lengths and fit a subset                                                               
+    # Note: Read all lengths and fit a subset
     lengths=np.arange(args.lengths[0], args.lengths[1] + 1),
     dist_th=args.dist_th,
     # frames_boundaries=[0, 10000], # Ignore to load all frames
@@ -77,7 +77,7 @@ def process_tracks(path, args):
       np.concatenate(list(v.flatten() for v in
         opt_metrics[args.col_precision].values())))
     logging.info(f'Estimated localisation precision: {est_precision}')
-      
+
     if not args.no_precision:
       logging.info(f'Creating per-localisation precision')
       # Note: The LocError key is ignored if input_LocErr is not None.
@@ -193,7 +193,7 @@ def process_tracks(path, args):
   # optional position refinement
   if args.refine:
     logging.info('Generating position refinement')
-    LocErr, ds, Fs, TrMat, pBL = extrack.tracking.extract_params(params, 
+    LocErr, ds, Fs, TrMat, pBL = extrack.tracking.extract_params(params,
       dt=args.dt,
       nb_states=args.nb_states,
       nb_substeps=substeps,
@@ -218,12 +218,12 @@ def process_tracks(path, args):
     opt_metrics['refined_x_pos'] = refined_pos0
     opt_metrics['refined_y_pos'] = refined_pos1
     opt_metrics['refined_LocErrs'] = refined_LocErrs
-  
+
   # optional state duration histogram
   if args.durations:
     from extrack.histograms import len_hist
     logging.info('Generating state duration histogram')
-    LocErr, ds, Fs, TrMat, pBL = extrack.tracking.extract_params(params, 
+    LocErr, ds, Fs, TrMat, pBL = extrack.tracking.extract_params(params,
       dt=args.dt,
       nb_states=args.nb_states,
       nb_substeps=substeps,
@@ -236,7 +236,7 @@ def process_tracks(path, args):
       nb_substeps=substeps,
       max_nb_states=500,
       input_LocErr=input_LocErr)
-     
+
     # Save to CSV
     DATA = None
     for k, hist in enumerate(len_hists.T):
@@ -273,7 +273,7 @@ def process_tracks(path, args):
     col.append(np.argmax(pred_Bs[k], axis=2).flatten())
   DATA[COL_STATE] = np.concatenate(col)
   # Rename the X,Y,T,ID columns from the ExTrack names to the original names
-  DATA.rename(columns=dict(zip(['X','Y','frame','track_ID'], args.colnames)),
+  DATA.rename(columns=dict(zip(['POSITION_X','POSITION_Y','FRAME','TRACK_ID'], args.colnames)),
     inplace=True)
   # Re-order to the original
   cols = orig_colnames + [COL_STATE] +\
