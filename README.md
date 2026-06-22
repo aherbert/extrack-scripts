@@ -10,10 +10,13 @@ data using the ExTrack model.
 Setup the environment as described on the ExTrack documentation. This recommends
 using a conda enviroment to install dependencies (`cupy` is optional).
 
-    conda create -n extrack -c conda-forge python pip
+    conda create -n extrack -c conda-forge python=3.11 pip
     conda activate extrack
-    pip install numpy lmfit xmltodict matplotlib pandas
+    pip install numpy lmfit xmltodict matplotlib pandas numdifftools
     pip install extrack   # or install from source
+
+Note: Multi-processing for ExTrack was written for Python pre 3.12. To use multiprocessing
+requires an older Python version.
 
 To install from the ExTrack source, clone the ExTrack repository and install in the enviroment.
 The ExTrack documentation uses the deprecated `python setup.py install`.
