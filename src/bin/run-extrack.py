@@ -269,6 +269,8 @@ def process_tracks(path, args):
     logging.info(f'Saved state duration histogram: {hist_file}')
 
   # Predict
+  if not args.predict:
+    return
   logging.info('Generating predictions')
   pred_Bs = extrack.tracking.predict_Bs(all_tracks,
     dt=args.dt,
@@ -404,6 +406,9 @@ def parse_args():
   group.add_argument('--state-durations', '-s', dest='durations',
     action='store_true',
     help='do state duration histogram (default: %(default)s)')
+  group.add_argument('--predict', '-r', dest='predict',
+    action='store_true',
+    help='do prediction (default: %(default)s)')
 
   args = parser.parse_args()
 
