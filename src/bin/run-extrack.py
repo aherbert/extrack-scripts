@@ -116,7 +116,8 @@ def process_tracks(path, args):
   # Initialise model with defaults
   for param in params:
     model.setdefault(param, [])
-  for param in [KEY_LOG_LIKELIHOOD, KEY_USE_PRECISION, KEY_ARGS]:
+    model.setdefault(param + '_std', [])
+  for param in [KEY_LOG_LIKELIHOOD, KEY_FIT_RESULT, KEY_USE_PRECISION, KEY_ARGS]:
     model.setdefault(param, [])
 
   # Fit tracks of limited length
