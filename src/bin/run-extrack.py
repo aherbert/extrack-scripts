@@ -26,6 +26,7 @@ import logging
 import time
 
 KEY_LOG_LIKELIHOOD = 'log_likelihood'
+KEY_FIT_RESULT = 'result'
 KEY_USE_PRECISION = 'use_precision'
 KEY_ARGS = 'args'
 COL_STATE = 'state'
@@ -144,10 +145,10 @@ def process_tracks(path, args):
       steady_state=False,
       threshold=args.threshold, # threshold for the fusion of the sequences of states
       max_nb_states=200, # maximum number of sequences of states to consider.
-      method='bfgs')
+      method=args.method)
     t = time.time() - start_time
 
-    if args.debug and not model_fit.success:
+    if not model_fit.success:
       logging.info(f'Failed: {model_fit.message}')
 
     ll = -model_fit.residual[0]
@@ -162,12 +163,26 @@ def process_tracks(path, args):
 
     # Do not overwrite initial params
     params2 = model_fit.params
-    logging.info('Parameters:\n' +
-      '\n'.join(f'  {k}={v.value}' for k, v in params2.items()))
+    if model_fit.uvars is not None:
+      logging.info('Parameters:\n' +
+        '\n'.join(f'  {k}={repr(v)}' for k, v in model_fit.uvars.items()))
+    else:
+      logging.info('Parameters:\n' +
+        '\n'.join(f'  {k}={v.value}' for k, v in params2.items()))
 
-    for param in params2:
-      model[param].append(params2[param].value)
+    if args.debug and model_fit.covar is not None:
+      logging.debug('Covar:\n%s', model_fit.covar)
+
+    if model_fit.uvars is not None:
+      for param, v in model_fit.uvars.items():
+        model[param].append(v.n)
+        model[param + '_std'].append(v.s)
+    else:
+      for param in params2:
+        model[param].append(params2[param].value)
+        model[param + '_std'].append(0)
     model[KEY_LOG_LIKELIHOOD].append(ll)
+    model[KEY_FIT_RESULT].append('OK' if model_fit.success else model_fit.message)
     model[KEY_USE_PRECISION].append(input_LocErr is not None)
     model[KEY_ARGS].append(args2)
 
@@ -327,7 +342,9 @@ def parse_args():
       ' (default: %(default)s)')
   group.add_argument('--col-names', dest='colnames', nargs=4,
     # Configure for GDSC SMLM csv column headings
-    default=['X', 'Y', 'Time', 'Identifier'],
+    # default=['X', 'Y', 'Time', 'Identifier'],
+    # Configure for Spot-On csv column headings
+    default=['x', 'y', 't', 'trajectory'],
     help='columns headings for X,Y,T,ID (default: %(default)s)')
   group.add_argument('--col-precision', dest='col_precision',
     # Configure for GDSC SMLM csv column heading
@@ -376,6 +393,8 @@ def parse_args():
   group.add_argument('--sub-steps', dest='substeps', type=int, default=1,
     help='number of considered transition steps in between consecutive'\
       ' 2 positions (default: %(default)s)')
+  group.add_argument('--method', default='bfgs',
+    help='fitting method (default: %(default)s)')
 
   group = parser.add_argument_group('Prediction')
   group.add_argument('--position-refinement', '-p', dest='refine',
