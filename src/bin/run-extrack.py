@@ -187,8 +187,7 @@ def process_tracks(path, args):
     model[KEY_USE_PRECISION].append(input_LocErr is not None)
     model[KEY_ARGS].append(args2)
 
-  # Save model
-  if args.repeats > 0:
+    # Save model after each repeat
     logging.info(f'Saving new model: {model_file}')
     with open(model_file, 'w') as f:
       json.dump(model, f, indent=2, sort_keys=True)
