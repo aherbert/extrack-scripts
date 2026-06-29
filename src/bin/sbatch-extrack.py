@@ -44,15 +44,18 @@ def _create_job_script(args: argparse.Namespace, fn: str) -> str:
       #SBATCH -o {name}."%j".out
       #SBATCH --mail-user {args.username}@sussex.ac.uk
       #SBATCH --mail-type=END,FAIL
+      #SBATCH --mem={args.memory}G
       """),
             file=f,
         )
         if args.threads > 1:
+            # For python multiprocessing we require shared memory parallelization.
+            # It spawns new processes that all have access to the main memory of a single machine.
             print(
                 inspect.cleandoc(f"""\
-        #SBATCH --ntasks=1
+        #SBATCH --ntasks={args.threads}
         #SBATCH --nodes=1
-        #SBATCH --cpus-per-task={args.threads}
+        #SBATCH --cpus-per-task=1
         """),
                 file=f,
             )
@@ -94,6 +97,13 @@ def _parse_args() -> argparse.Namespace:
         dest="threads",
         default=20,
         help="Threads (default: %(default)s)",
+    )
+    group.add_argument(
+        "--memory",
+        type=int,
+        dest="memory",
+        default=32,
+        help="Memory in Gb (default: %(default)s)",
     )
     group.add_argument(
         "--submit",
