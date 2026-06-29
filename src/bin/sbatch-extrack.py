@@ -106,7 +106,7 @@ def _parse_args() -> argparse.Namespace:
         "--nb-states",
         type=int,
         default=2,
-        help="Inference model(s).",
+        help="number of states (default: %(default)s)",
     )
 
     return parser.parse_args()
