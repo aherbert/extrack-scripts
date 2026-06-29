@@ -50,7 +50,9 @@ def _create_job_script(args: argparse.Namespace, fn: str) -> str:
         if args.threads > 1:
             print(
                 inspect.cleandoc(f"""\
-        #SBATCH -n {args.threads}
+        #SBATCH --ntasks=1
+        #SBATCH --nodes=1
+        #SBATCH --cpus-per-task={args.threads}
         """),
                 file=f,
             )
