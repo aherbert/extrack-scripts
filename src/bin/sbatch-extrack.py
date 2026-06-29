@@ -59,7 +59,7 @@ def _create_job_script(args: argparse.Namespace, fn: str) -> str:
             inspect.cleandoc(
                 f"""
         conda activate extrack
-        ./run-extrack.py {fn} {prog_options}
+        ./run-extrack.py "{fn}" {prog_options}
         rm {script}
         """), file=f)
 
