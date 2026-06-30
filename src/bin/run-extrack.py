@@ -432,7 +432,7 @@ def parse_args():
 
 if __name__ == '__main__':
   args = parse_args()
-  if args.debug:
+  if args.debug or args.repeats > 0:
     logging.info('Arguments:\n' +
       '\n'.join(f'  {k}={v}' for k, v in vars(args).items()))
 
