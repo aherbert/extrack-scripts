@@ -30,14 +30,25 @@ def main():
     help='show the best model')
   parser.add_argument('-j', '--json', dest='json', action='store_true',
     help='json dump')
+  parser.add_argument('-c', '--csv', dest='csv', action='store_true',
+    help='csv table')
+  parser.add_argument('-a', '--all', dest='all', action='store_true',
+    help='combined csv table')
   parser.add_argument('-d', '--delete', dest='delete', nargs='+',
-    help='keys to remove from the output')
+    help='keys to remove from the output (overrides include)')
   parser.add_argument('-i', '--include', dest='include', nargs='+',
-    help='keys to include in the output (overrides delete)')
+    help='keys to include in the output')
 
   args = parser.parse_args()
   kd = set(args.delete) if args.delete else set()
   ki = set(args.include) if args.include else set()
+
+  data = []
+  if args.csv:
+    import pandas as pd
+    kd.add('args')
+    kd.add('result')
+
   for path in args.file:
     file_name, file_extension = os.path.splitext(path)
 
@@ -46,29 +57,41 @@ def main():
         model = json.load(f)
     else:
       print(f'ERROR: Unknown model for {path}')
-      continue;
+      continue
 
-    print(f'Model: {path}')
-    
+    if not args.csv:
+      print(f'Model: {path}')
+
     if args.best:
       m = np.argmin(model['log_likelihood'])
       for k in model:
         model[k] = model[k][m]
 
-    if ki:
-      keys_to_include = ki.intersection(set(model.keys()))
-      model = {k: model[k] for k in keys_to_include}
-    elif kd:
+    if kd:
       keys_to_remove = kd.intersection(set(model.keys()))
       for key in keys_to_remove:
         del model[key]
-    
+    if ki:
+      keys_to_include = ki.intersection(set(model.keys()))
+      model = {k: model[k] for k in keys_to_include}
+
     if args.json:
       print(json.dumps(model, indent=2, sort_keys=True))
+    elif args.csv:
+      df = pd.DataFrame(model, index=[0]).reset_index(drop=True)
+      df.insert(loc=0, column='name', value=path)
+      if args.all:
+        data.append(df)
+      else:
+        print(df.to_csv(index=False).rstrip())
     else:
       import pprint
       pp = pprint.PrettyPrinter(indent=2)
       pp.pprint(model)
+
+  if data:
+    # Create NA entries if columns are missing from tables, e.g. 2 and 3 state models
+    print(pd.concat(data, axis=0).reset_index(drop=True).to_csv(index=False).rstrip())
 
 if __name__ == '__main__':
   main()
