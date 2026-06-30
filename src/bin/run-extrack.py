@@ -24,6 +24,7 @@ import json
 import os
 import logging
 import time
+import datetime
 
 KEY_LOG_LIKELIHOOD = 'log_likelihood'
 KEY_FIT_RESULT = 'result'
@@ -34,6 +35,7 @@ COL_STATE = 'state'
 def process_tracks(path, args):
   # lazy import
   import extrack
+  started = time.time()
   logging.info(f'Reading track data: {path}')
 
   # Read all additional columns to allow original data to be saved
@@ -268,41 +270,41 @@ def process_tracks(path, args):
     logging.info(f'Saved state duration histogram: {hist_file}')
 
   # Predict
-  if not args.predict:
-    return
-  logging.info('Generating predictions')
-  pred_Bs = extrack.tracking.predict_Bs(all_tracks,
-    dt=args.dt,
-    # lmfit parameters used for the model
-    params=params,
-    cell_dims=[args.cell_dim],
-    nb_states=args.nb_states,
-    frame_len=args.frames,
-    workers=args.workers,
-    input_LocErr=input_LocErr)
+  if args.predict:
+    logging.info('Generating predictions')
+    pred_Bs = extrack.tracking.predict_Bs(all_tracks,
+      dt=args.dt,
+      # lmfit parameters used for the model
+      params=params,
+      cell_dims=[args.cell_dim],
+      nb_states=args.nb_states,
+      frame_len=args.frames,
+      workers=args.workers,
+      input_LocErr=input_LocErr)
 
-  # Convert to data frame
-  DATA = extrack.exporters.extrack_2_pandas(all_tracks, pred_Bs,
-    frames=frames, opt_metrics=opt_metrics)
-  # Add category column based on max probability state
-  col = []
-  for k in pred_Bs:
-    col.append(np.argmax(pred_Bs[k], axis=2).flatten())
-  DATA[COL_STATE] = np.concatenate(col)
-  # Rename the X,Y,T,ID columns from the ExTrack names to the original names
-  DATA.rename(columns=dict(zip(['POSITION_X','POSITION_Y','FRAME','TRACK_ID'], args.colnames)),
-    inplace=True)
-  # Re-order to the original
-  cols = orig_colnames + [COL_STATE] +\
-    list(f'pred_{i}' for i in range(args.nb_states))
-  if args.refine:
-    cols = cols + ['refined_x_pos', 'refined_y_pos', 'refined_LocErrs']
-  DATA = DATA[cols]
-  # Save tracks
-  pred_file = file_base + '.pred.csv'
-  DATA.to_csv(pred_file, index=False)
-  logging.info(f'Saved predictions: {pred_file}')
+    # Convert to data frame
+    DATA = extrack.exporters.extrack_2_pandas(all_tracks, pred_Bs,
+      frames=frames, opt_metrics=opt_metrics)
+    # Add category column based on max probability state
+    col = []
+    for k in pred_Bs:
+      col.append(np.argmax(pred_Bs[k], axis=2).flatten())
+    DATA[COL_STATE] = np.concatenate(col)
+    # Rename the X,Y,T,ID columns from the ExTrack names to the original names
+    DATA.rename(columns=dict(zip(['POSITION_X','POSITION_Y','FRAME','TRACK_ID'], args.colnames)),
+      inplace=True)
+    # Re-order to the original
+    cols = orig_colnames + [COL_STATE] +\
+      list(f'pred_{i}' for i in range(args.nb_states))
+    if args.refine:
+      cols = cols + ['refined_x_pos', 'refined_y_pos', 'refined_LocErrs']
+    DATA = DATA[cols]
+    # Save tracks
+    pred_file = file_base + '.pred.csv'
+    DATA.to_csv(pred_file, index=False)
+    logging.info(f'Saved predictions: {pred_file}')
 
+  logging.info(f'Done in {datetime.timedelta(seconds=time.time() - started)}')
 
 def parse_args():
   parser = argparse.ArgumentParser(
