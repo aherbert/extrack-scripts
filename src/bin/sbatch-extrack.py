@@ -99,7 +99,7 @@ def _parse_args() -> argparse.Namespace:
         "--threads",
         type=int,
         dest="threads",
-        default=20,
+        default=16,
         help="Threads (default: %(default)s)",
     )
     group.add_argument(
