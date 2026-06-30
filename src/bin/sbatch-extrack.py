@@ -8,12 +8,13 @@ import os
 import subprocess
 
 
-def _create_job_script(args: argparse.Namespace, fn: str) -> str:
+def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
     """Create the SLURM job script.
 
     Args:
         args: Program arguments
         fn: Track file
+        fno: File number
 
     Returns:
         The name of the script file
@@ -28,7 +29,7 @@ def _create_job_script(args: argparse.Namespace, fn: str) -> str:
         raise Exception(f"Missing data file: {fn}")
 
     # Job name uses PID to avoid script name clashes
-    name = f"extrack.{os.getpid()}"
+    name = f"ext{fno}.{os.getpid()}"
 
     # Options
     prog_options = f"--nb-states {args.nb_states}"
@@ -128,8 +129,8 @@ def _parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = _parse_args()
 
-    for fn in args.data:
-        script = _create_job_script(args, fn)
+    for fno, fn in enumerate(args.data):
+        script = _create_job_script(args, fn, fno)
 
         # job submission
         if args.submit:
