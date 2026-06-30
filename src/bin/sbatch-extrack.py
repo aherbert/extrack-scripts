@@ -19,10 +19,11 @@ def _create_job_script(args: argparse.Namespace, fn: str) -> str:
         The name of the script file
     """
     # Validate installation
+    dir = os.path.dirname(__file__)
     extrack_prog = "run-extrack.py"
 
-    if not os.path.isfile(extrack_prog):
-        raise Exception(f"Missing program: {extrack_prog}")
+    if not os.path.isfile(os.path.join(dir, extrack_prog)):
+        raise Exception(f"Missing program: {os.path.join(dir, extrack_prog)}")
     if not os.path.isfile(fn):
         raise Exception(f"Missing data file: {fn}")
 
@@ -60,11 +61,13 @@ def _create_job_script(args: argparse.Namespace, fn: str) -> str:
                 file=f,
             )
         # job script
+
         print(
             inspect.cleandoc(
                 f"""
         conda activate extrack
-        ./run-extrack.py "{fn}" {prog_options}
+        export PATH=$PATH:{dir}
+        run-extrack.py "{fn}" {prog_options}
         rm {script}
         """), file=f)
 
