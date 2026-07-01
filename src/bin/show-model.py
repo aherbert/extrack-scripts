@@ -78,7 +78,9 @@ def main():
     if args.json:
       print(json.dumps(model, indent=2, sort_keys=True))
     elif args.csv:
-      df = pd.DataFrame(model, index=[0]).reset_index(drop=True)
+      # Require an index to use scalar values
+      index = [0] if args.best else None
+      df = pd.DataFrame(model, index=index).reset_index(drop=True)
       df.insert(loc=0, column='name', value=path)
       if args.all:
         data.append(df)
@@ -91,7 +93,9 @@ def main():
 
   if data:
     # Create NA entries if columns are missing from tables, e.g. 2 and 3 state models
-    print(pd.concat(data, axis=0).reset_index(drop=True).to_csv(index=False).rstrip())
+    df = pd.concat(data, axis=0).reset_index(drop=True).sort_values(
+      'name', ignore_index=True, key=lambda col: col.str.lower())
+    print(df.to_csv(index=False).rstrip())
 
 if __name__ == '__main__':
   main()
