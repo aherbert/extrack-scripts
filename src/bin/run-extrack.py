@@ -133,6 +133,46 @@ def process_tracks(path, args):
 
   for i in range(args.repeats):
     logging.info(f'Fitting {i+1}/{args.repeats}')
+
+    # Random start point
+    if not args.use_estimated:
+      gen = np.random.default_rng()
+      estimated_d = args.estimated_d
+      estimated_f = args.estimated_f
+      d_min = min(0.1, args.d_max / 4)
+      d_range = args.d_max / 2 - d_min
+      if args.nb_states == 2:
+        estimated_d = [0, d_min + gen.uniform() * d_range]
+        estimated_f = [gen.uniform(0.1, 0.9), 0]
+        estimated_f[1] = 1 - estimated_f[0]
+      elif args.nb_states == 3:
+        estimated_d = [0,
+          d_min + gen.uniform() * d_range / 3,
+          d_min + d_range - gen.uniform() * d_range / 3]
+        estimated_f = [gen.uniform(0.1, 0.4), gen.uniform(0.1, 0.4), 0]
+        estimated_f[2] = 1 - estimated_f[0] - estimated_f[1]
+      else:
+        logging.error(f'Cannot generate random estimates for states: {args.nb_states}')
+        return
+
+      logging.info(f'Start: F={estimated_f}, D={estimated_d}')
+
+      # Create lmfit.parameter.Parameters
+      params = extrack.tracking.generate_params(nb_states=args.nb_states,
+        LocErr_type=LocErr_type,
+        nb_dims=2, # only matters if LocErr_type==2.
+        LocErr_bounds=args.loc_bounds, # the initial guess on LocErr will be the geometric mean of the boundaries.
+        D_max=args.d_max, # maximal diffusion coefficient allowed.
+        Fractions_bounds=args.f_bounds,
+        # estimated_LocErr=[0.022],
+        estimated_Ds=estimated_d, # D will be arbitrary spaced from 0 to D_max if None, otherwise input a list of Ds for each state
+        estimated_Fs=estimated_f, # fractions will be equal if None, otherwise input a list of fractions for each state
+        estimated_transition_rates=args.estimated_rate, # transition rate per step. example [0.1,0.05,0.03,0.07,0.2,0.2] for a 3-state model.
+        )
+      if est_precision is not None:
+        # This is clipped to the bounds
+        params['LocErr'].value = est_precision
+
     start_time = time.time()
     # https://lmfit.github.io/lmfit-py/fitting.html#lmfit.minimizer.MinimizerResult
     model_fit = extrack.tracking.param_fitting(all_tracks=fit_tracks,
@@ -357,7 +397,7 @@ def parse_args():
 
   group = parser.add_argument_group('Fit parameters')
   group.add_argument('--d-max', dest='d_max', type=float,
-    default=1,
+    default=2,
     help='maximum diffusion coefficient (default: %(default)s)')
   group.add_argument('--loc-bounds', dest='loc_bounds', nargs=2, type=float,
     default=[0.01, 0.05],
@@ -384,6 +424,8 @@ def parse_args():
       ' e.g. [k01, k02, k10, k12, k20, k21] for 3-state model.'\
       ' Note: len = nb-states * (nb-states - 1)'\
       ' otherwise will default to first value')
+  group.add_argument('--use-estimated', action='store_true',
+    help='use the estimated f and d; default is to randomly initialise in the range')
 
   group = parser.add_argument_group('Fitting')
   group.add_argument('--fit-lengths', dest='fit_lengths', nargs=2, type=int,
