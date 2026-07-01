@@ -32,7 +32,7 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
     name = f"ext{fno}.{os.getpid()}"
 
     # Options
-    prog_options = f"--nb-states {args.nb_states}"
+    prog_options = f"--nb-states {args.nb_states} --repeats {args.repeats}"
 
     # Create the job file
     script = f"{name}.sh"
@@ -141,6 +141,12 @@ def _parse_args() -> argparse.Namespace:
         type=int,
         default=2,
         help="number of states (default: %(default)s)",
+    )
+    group.add_argument(
+      "--repeats",
+      type=int,
+      default=3,
+      help="number of repeats (default: %(default)s)",
     )
 
     return parser.parse_args()
