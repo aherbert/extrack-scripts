@@ -43,7 +43,7 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
             inspect.cleandoc(f"""\
       #!/bin/bash -l
       #SBATCH -J {name}
-      #SBATCH -o {name}."%j".out
+      #SBATCH -o "{fn}.{args.nb_states}.%j.out"
       #SBATCH --mail-user {args.username}@sussex.ac.uk
       #SBATCH --mail-type=END,FAIL
       #SBATCH --mem={args.memory}G
@@ -51,6 +51,13 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
       """),
             file=f,
         )
+        if args.hours > 0:
+            print(
+                inspect.cleandoc(f"""\
+        #SBATCH --time={args.hours}:00:00
+        """),
+                file=f,
+            )
         if args.threads > 1:
             # For python multiprocessing we require shared memory parallelization.
             # It spawns new processes that all have access to the main memory of a single machine.
@@ -63,7 +70,6 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
                 file=f,
             )
         # job script
-
         print(
             inspect.cleandoc(
                 f"""
@@ -102,6 +108,12 @@ def _parse_args() -> argparse.Namespace:
         dest="threads",
         default=16,
         help="Threads (default: %(default)s)",
+    )
+    group.add_argument(
+        "--hours",
+        type=int,
+        default=0,
+        help="Optional maximum job hours (default: %(default)s)",
     )
     group.add_argument(
         "-p",
