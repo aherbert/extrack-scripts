@@ -371,12 +371,12 @@ def parse_args():
     type=float, default=[0.0001, 0.03],
     help='estimated diffusion coefficients for each state'\
       ' (default: %(default)s). Note: len = nb-states'\
-      ' otherwise will default to spaced between 0 and d-max')
+      ' otherwise will default to spaced between 0 and d-max/2')
   group.add_argument('--estimated-f', dest='estimated_f', nargs='+',
     type=float, default=[0.3, 0.7],
     help='estimated fractions for each state'\
       ' (default: %(default)s). Note: len = nb-states'\
-      ' otherwise will default to 0.5')
+      ' otherwise will default to 1/nb-states')
   group.add_argument('--estimated-rate', dest='estimated_rate', nargs='+',
     type=float, default=[0.1],
     help='mean transitions per step'\
