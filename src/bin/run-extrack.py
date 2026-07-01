@@ -126,6 +126,7 @@ def process_tracks(path, args):
     if not len(model[KEY_LOG_LIKELIHOOD]):
       logging.error(f'No best model for states: {args.nb_states}')
       return
+    logging.info('Initialising to best model parameters')
     m = np.argmax(model[KEY_LOG_LIKELIHOOD])
     for k, v in params.items():
       v.value = model[k][m]
@@ -139,8 +140,11 @@ def process_tracks(path, args):
   args2 = vars(args).copy()
   del args2['file']
 
-  for i in range(args.repeats):
-    logging.info(f'Fitting {i+1}/{args.repeats}')
+  # estimated and best are not random => no repeats
+  repeats = args.repeats if args.fit_mode == 'random' else min(1, args.repeats)
+
+  for i in range(repeats):
+    logging.info(f'Fitting {i+1}/{repeats}')
 
     # Random start point
     if args.fit_mode == 'random':
@@ -163,7 +167,7 @@ def process_tracks(path, args):
         logging.error(f'Cannot generate random estimates for states: {args.nb_states}')
         return
 
-      logging.info(f'Start: F={estimated_f}, D={estimated_d}')
+      logging.info(f'Random start: F={estimated_f}, D={estimated_d}')
 
       # Create lmfit.parameter.Parameters
       params = extrack.tracking.generate_params(nb_states=args.nb_states,
