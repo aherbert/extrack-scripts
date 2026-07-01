@@ -122,6 +122,14 @@ def process_tracks(path, args):
   for param in [KEY_LOG_LIKELIHOOD, KEY_FIT_RESULT, KEY_USE_PRECISION, KEY_ARGS]:
     model.setdefault(param, [])
 
+  if args.fit_mode == 'best':
+    if not len(model[KEY_LOG_LIKELIHOOD]):
+      logging.error(f'No best model for states: {args.nb_states}')
+      return
+    m = np.argmax(model[KEY_LOG_LIKELIHOOD])
+    for k, v in params.items():
+      v.value = model[k][m]
+
   # Fit tracks of limited length
   wanted_keys = [str(k)
     for k in range(args.fit_lengths[0], args.fit_lengths[1] + 1)]
@@ -135,7 +143,7 @@ def process_tracks(path, args):
     logging.info(f'Fitting {i+1}/{args.repeats}')
 
     # Random start point
-    if not args.use_estimated:
+    if args.fit_mode == 'random':
       gen = np.random.default_rng()
       estimated_d = args.estimated_d
       estimated_f = args.estimated_f
@@ -424,8 +432,12 @@ def parse_args():
       ' e.g. [k01, k02, k10, k12, k20, k21] for 3-state model.'\
       ' Note: len = nb-states * (nb-states - 1)'\
       ' otherwise will default to first value')
-  group.add_argument('--use-estimated', action='store_true',
-    help='use the estimated f and d; default is to randomly initialise in the range')
+  group.add_argument('--fit-mode',
+    default='random',
+    choices=['estimated', 'random', 'best'],
+    help='estimated: use the estimated f and d; '\
+      'random: randomly initialise f and d; '\
+      'best: use best model (default: %(default)s)')
 
   group = parser.add_argument_group('Fitting')
   group.add_argument('--fit-lengths', dest='fit_lengths', nargs=2, type=int,
