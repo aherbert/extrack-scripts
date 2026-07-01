@@ -47,6 +47,7 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
       #SBATCH --mail-user {args.username}@sussex.ac.uk
       #SBATCH --mail-type=END,FAIL
       #SBATCH --mem={args.memory}G
+      #SBATCH --partition={args.partition}
       """),
             file=f,
         )
@@ -101,6 +102,13 @@ def _parse_args() -> argparse.Namespace:
         dest="threads",
         default=16,
         help="Threads (default: %(default)s)",
+    )
+    group.add_argument(
+        "-p",
+        "--partition",
+        dest="partition",
+        default="general",
+        help="Job class, e.g. general; long (default: %(default)s)",
     )
     group.add_argument(
         "--memory",
