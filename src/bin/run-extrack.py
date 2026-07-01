@@ -82,7 +82,7 @@ def process_tracks(path, args):
     logging.info(f'Estimated localisation precision: {est_precision}')
 
     if not args.no_precision:
-      logging.info(f'Creating per-localisation precision')
+      logging.info('Creating per-localisation precision')
       # Note: The LocError key is ignored if input_LocErr is not None.
       # Leave the error type as 1. This creates parameters with a
       # LocErr key so that the saved model has the same number of keys
@@ -97,7 +97,7 @@ def process_tracks(path, args):
       for k, v in opt_metrics[args.col_precision]:
         input_LocErr[k] = np.repeat(v, 2, axis=1).reshape(v.shape + (2,))
 
-  logging.info(f'Creating parameters')
+  logging.info('Creating parameters')
 
   # Create lmfit.parameter.Parameters
   params = extrack.tracking.generate_params(nb_states=args.nb_states,
