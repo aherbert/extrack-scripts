@@ -8,7 +8,10 @@ import os
 import subprocess
 
 
-def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
+extrack_prog = "run-extrack.py"
+
+
+def _create_job_script(args: argparse.Namespace, prog_options: str, fn: str, fno: int) -> str:
     """Create the SLURM job script.
 
     Args:
@@ -21,7 +24,6 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
     """
     # Validate installation
     dir = os.path.dirname(__file__)
-    extrack_prog = "run-extrack.py"
 
     if not os.path.isfile(os.path.join(dir, extrack_prog)):
         raise Exception(f"Missing program: {os.path.join(dir, extrack_prog)}")
@@ -30,9 +32,6 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
 
     # Job name uses PID to avoid script name clashes
     name = f"ext{fno}.{os.getpid()}"
-
-    # Options
-    prog_options = f"--nb-states {args.nb_states} --repeats {args.repeats}"
 
     # Create the job file
     script = f"{name}.sh"
@@ -82,17 +81,19 @@ def _create_job_script(args: argparse.Namespace, fn: str, fno: int) -> str:
         return script
 
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args() -> tuple[argparse.Namespace, list[str]]:
     """Parse the script arguments."""
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Program to run ExTrack on a SLURM cluster.",
-        epilog=inspect.cleandoc("""Note:
+        epilog=inspect.cleandoc(f"""Note:
 
       This program makes assumptions on the installation of ExTrack and
-      the run environment."""),
+      the run environment.
+
+      Unknown arguments are parsed to {extrack_prog}."""),
     )
-    parser.add_argument("data", nargs="+", help="Track fail")
+    parser.add_argument("data", nargs="+", help="Track file")
     group = parser.add_argument_group("Job submission")
     group.add_argument(
         "-u",
@@ -142,21 +143,19 @@ def _parse_args() -> argparse.Namespace:
         default=2,
         help="number of states (default: %(default)s)",
     )
-    group.add_argument(
-      "--repeats",
-      type=int,
-      default=3,
-      help="number of repeats (default: %(default)s)",
-    )
 
-    return parser.parse_args()
+    return parser.parse_known_args()
 
 
 if __name__ == "__main__":
-    args = _parse_args()
+    args, rest = _parse_args()
+
+    # Number of states is special as it is used for the output filename.
+    # This must be passed through manually.
+    prog_options = ' '.join(rest) + f' --nb-states {args.nb_states}'
 
     for fno, fn in enumerate(args.data):
-        script = _create_job_script(args, fn, fno)
+        script = _create_job_script(args, prog_options, fn, fno)
 
         # job submission
         if args.submit:
