@@ -210,7 +210,7 @@ def process_tracks(path, args):
     # Information criterion
     # n = number of ??? (localisations, displacements, ...)
     # k = number of fit parameters
-    n = sum(len(b) for a in all_tracks.values() for b in a)
+    n = sum(len(b) for a in fit_tracks.values() for b in a)
     k = model_fit.nvarys
     aic = 2*k - 2*ll
     bic = np.log(n)*k - 2*ll
