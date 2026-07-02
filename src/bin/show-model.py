@@ -63,7 +63,7 @@ def main():
       print(f'Model: {path}')
 
     if args.best:
-      m = np.argmin(model['log_likelihood'])
+      m = np.argmax(model['log_likelihood'])
       for k in model:
         model[k] = model[k][m]
 
