@@ -214,7 +214,7 @@ def process_tracks(path, args):
     k = model_fit.nvarys
     aic = 2*k - 2*ll
     bic = np.log(n)*k - 2*ll
-    logging.info(f'LL {ll} : AIC {aic} : BIC {bic} (in {t} seconds)')
+    logging.info(f'LL {ll} : n={n}, k={k} : AIC {aic} : BIC {bic} (in {t} seconds)')
 
     # Do not overwrite initial params
     params2 = model_fit.params
