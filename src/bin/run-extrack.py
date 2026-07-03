@@ -218,6 +218,8 @@ def process_tracks(path, args):
 
     # Do not overwrite initial params
     params2 = model_fit.params
+    if not hasattr(model_fit, 'uvars'):
+        model_fit.uvars = None
     if model_fit.uvars is not None:
       logging.info('Parameters:\n' +
         '\n'.join(f'  {k}={repr(v)}' for k, v in model_fit.uvars.items()))
