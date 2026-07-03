@@ -42,7 +42,7 @@ def _create_job_script(args: argparse.Namespace, prog_options: str, fn: str, fno
             inspect.cleandoc(f"""\
       #!/bin/bash -l
       #SBATCH -J {name}
-      #SBATCH -o "{os.path.splitext(fn)[0]}.{args.nb_states}.%j.out"
+      #SBATCH -o "{os.path.splitext(fn)[0]}.{args.nb_states}.%j.log"
       #SBATCH --mail-user {args.username}@sussex.ac.uk
       #SBATCH --mail-type=END,FAIL
       #SBATCH --mem={args.memory}G
