@@ -139,6 +139,7 @@ def process_tracks(path, args):
     order=args.order,
     maxiter=args.maxiter,
     rtol=args.rtol,
+    forward=args.forward,
     )
 
   rt = time.time() - started
@@ -250,6 +251,9 @@ def parse_args():
   group.add_argument('--num-steps', type=int,
     default=1,
     help='number of steps (default: %(default)s)')
+  group.add_argument('--forward',
+    action='store_true',
+    help='use forward differences; otherwise central (numdifftools) (default: %(default)s)')
   group.add_argument('--dd-method', type=int,
     default=0,
     help='method: 0=numdifftools; 1=scipy hessian (default: %(default)s)')
