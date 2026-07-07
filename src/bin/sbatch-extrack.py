@@ -8,9 +8,6 @@ import os
 import subprocess
 
 
-extrack_prog = "run-extrack.py"
-
-
 def _create_job_script(args: argparse.Namespace, prog_options: str, fn: str, fno: int) -> str:
     """Create the SLURM job script.
 
@@ -25,8 +22,9 @@ def _create_job_script(args: argparse.Namespace, prog_options: str, fn: str, fno
     # Validate installation
     dir = os.path.dirname(__file__)
 
-    if not os.path.isfile(os.path.join(dir, extrack_prog)):
-        raise Exception(f"Missing program: {os.path.join(dir, extrack_prog)}")
+    prog = os.path.join(dir, args.prog)
+    if not os.path.isfile(prog):
+        raise Exception(f"Missing program: {prog}")
     if not os.path.isfile(fn):
         raise Exception(f"Missing data file: {fn}")
 
@@ -74,7 +72,7 @@ def _create_job_script(args: argparse.Namespace, prog_options: str, fn: str, fno
                 f"""
         conda activate extrack
         export PATH=$PATH:{dir}
-        run-extrack.py "{fn}" {prog_options}
+        {prog} "{fn}" {prog_options}
         rm {script}
         """), file=f)
 
@@ -86,12 +84,12 @@ def _parse_args() -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Program to run ExTrack on a SLURM cluster.",
-        epilog=inspect.cleandoc(f"""Note:
+        epilog=inspect.cleandoc("""Note:
 
       This program makes assumptions on the installation of ExTrack and
       the run environment.
 
-      Unknown arguments are parsed to {extrack_prog}."""),
+      Unknown arguments are parsed to the ExTrack program."""),
     )
     parser.add_argument("data", nargs="+", help="Track file")
     group = parser.add_argument_group("Job submission")
@@ -137,6 +135,12 @@ def _parse_args() -> tuple[argparse.Namespace, list[str]]:
         help="Disable this to create the script but not submit using sbatch (default: %(default)s)",
     )
     group = parser.add_argument_group("ExTrack overrides")
+    group.add_argument(
+        "--prog",
+        choices=["run-extrack.py", "model-covar.py"],
+        default="run-extrack.py",
+        help="ExTrack program (default: %(default)s)",
+    )
     group.add_argument(
         "--nb-states",
         type=int,
