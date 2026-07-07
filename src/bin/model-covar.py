@@ -163,6 +163,7 @@ def process_tracks(path, args):
     'order': args.order,
     'maxiter': args.maxiter,
     'rtol': args.rtol,
+    'forward': args.forward,
     'time': rt,
   }
   for k, v in uvars.items():
