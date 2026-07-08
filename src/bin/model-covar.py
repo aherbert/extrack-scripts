@@ -107,6 +107,20 @@ def process_tracks(path, args):
     # This is clipped to the bounds
     params['LocErr'].value = est_precision
 
+  # Slacken parameter limits to allow x+/-delta for the gradients
+  params['LocErr'].min = 0
+  for i in range(args.nb_states - 1):
+    params[f'D{i}'].min = 0
+    params[f'F{i}'].min = 0
+    params[f'F{i}'].max = 1
+  # Note: F{n-1} is an expression and has no limits set
+  params[f'D{args.nb_states - 1}'].min = 0
+  for i in range(args.nb_states):
+    for j in range(args.nb_states):
+      if i != j:
+        params[f'p{i}{j}'].min = 0
+  params['pBL'].min = 0
+
   logging.info(f'Initialising to parameters of model number {model_no}')
   for k, v in params.items():
     v.value = model[k][model_no]
