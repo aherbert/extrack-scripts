@@ -30,7 +30,6 @@ KEY_LOG_LIKELIHOOD = 'log_likelihood'
 KEY_FIT_RESULT = 'result'
 KEY_USE_PRECISION = 'use_precision'
 KEY_ARGS = 'args'
-COL_STATE = 'state'
 
 def process_tracks(path, args):
   # Load previous model
@@ -130,6 +129,21 @@ def process_tracks(path, args):
     for k in range(args.fit_lengths[0], args.fit_lengths[1] + 1)]
   fit_tracks = dict((k, all_tracks[k]) for k in wanted_keys if k in all_tracks)
 
+  # Call back to save a new optimum model
+  def cb(p, ll):
+    logging.info('Saving new optimum parameter model')
+    for k, v in p.items():
+      model[k].append(v.value)
+      model[k + '_std'].append(0)
+    args2 = vars(args).copy()
+    del args2['file']
+    model[KEY_LOG_LIKELIHOOD].append(ll)
+    model[KEY_FIT_RESULT].append('Reoptimised during Hessian evaluation')
+    model[KEY_USE_PRECISION].append(input_LocErr is not None)
+    model[KEY_ARGS].append(args2)
+    with open(model_file, 'w') as f:
+      json.dump(model, f, indent=2, sort_keys=True)
+
   started = time.time()
 
   # https://lmfit.github.io/lmfit-py/fitting.html#lmfit.minimizer.MinimizerResult
@@ -146,6 +160,7 @@ def process_tracks(path, args):
     steady_state=False,
     threshold=args.threshold, # threshold for the fusion of the sequences of states
     max_nb_states=200, # maximum number of sequences of states to consider.
+    cb=cb,
     step=args.step,
     richardson_terms=args.richardson_terms,
     rel_step=args.rel_step,
