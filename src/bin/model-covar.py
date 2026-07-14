@@ -147,6 +147,7 @@ def process_tracks(path, args):
     threshold=args.threshold, # threshold for the fusion of the sequences of states
     max_nb_states=200, # maximum number of sequences of states to consider.
     step=args.step,
+    richardson_terms=args.richardson_terms,
     rel_step=args.rel_step,
     num_steps=args.num_steps,
     dd_method=args.dd_method,
@@ -266,6 +267,9 @@ def parse_args():
   group.add_argument('--num-steps', type=int,
     default=1,
     help='number of steps (default: %(default)s)')
+  group.add_argument('--richardson-terms', type=int,
+    default=2,
+    help='number of richardson terms used in extrapolation (numdifftools) (default: %(default)s)')
   group.add_argument('--forward',
     action='store_true',
     help='use forward differences; otherwise central (numdifftools) (default: %(default)s)')
