@@ -129,6 +129,20 @@ def process_tracks(path, args):
     for k in range(args.fit_lengths[0], args.fit_lengths[1] + 1)]
   fit_tracks = dict((k, all_tracks[k]) for k in wanted_keys if k in all_tracks)
 
+  # Optional parameters to estimate
+  if len(args.params):
+    wanted = set(args.params)
+    available = set([k for k, v in params.items() if v.vary])
+    if not available.issuperset(wanted):
+      wanted -= available
+      msg = f'Unavailable parameters: {wanted} from {available}'
+      logging.warn(msg)
+      raise Exception(msg)
+    for v in params.values():
+      v.vary = False
+    for k in wanted:
+      params[k].vary = True
+
   # Call back to save a new optimum model
   def cb(p, ll):
     logging.info('Saving new optimum parameter model')
@@ -273,6 +287,8 @@ def parse_args():
       ' 2 positions (default: %(default)s)')
 
   group = parser.add_argument_group('Hessian')
+  group.add_argument('--params', nargs='+', metavar='name',
+    help='parameters to estimate (default: all)')
   group.add_argument('--step', type=float,
     default=1e-4,
     help='step (default: %(default)s)')
