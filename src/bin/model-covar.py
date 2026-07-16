@@ -288,6 +288,7 @@ def parse_args():
 
   group = parser.add_argument_group('Hessian')
   group.add_argument('--params', nargs='+', metavar='name',
+    default=[],
     help='parameters to estimate (default: all)')
   group.add_argument('--step', type=float,
     default=1e-4,
