@@ -146,6 +146,9 @@ def process_tracks(path, args):
   # Call back to save a new optimum model
   def cb(p, ll):
     logging.info('Saving new optimum parameter model')
+    # Reload model as it may have been changed by another process
+    with open(model_file) as f:
+      model = json.load(f)
     for k, v in p.items():
       model[k].append(v.value)
       model[k + '_std'].append(0)
