@@ -22,22 +22,45 @@ def main():
   parser = argparse.ArgumentParser(
     description='Program to show saved ExTrack model covariance.')
   parser.add_argument('file', nargs='+', metavar='FILE', help='model file')
+  parser.add_argument("-b",
+      "--basename",
+      dest="basename",
+      default=False,
+      action=argparse.BooleanOptionalAction,
+      help="Use basename for 'name' column (collates filenames from multiple directories) (default: %(default)s)",
+  )
+  parser.add_argument("-e",
+      "--estimates",
+      dest="estimates",
+      default=False,
+      action=argparse.BooleanOptionalAction,
+      help="Use results with the error estimates (default: %(default)s)",
+  )
 
   args = parser.parse_args()
 
   import pandas as pd
+  import numpy as np
+  import sys
+  from os.path import basename
 
   data = []
 
   for path in args.file:
     df = pd.read_csv(path)
-    data.append(df)
+    if args.basename:
+      df['name'] = [basename(x) for x in df['name']]
+    if args.estimates:
+      df = df[df['F0_std'] != 0]
+    if len(df):
+      data.append(df)
 
   # Create NA entries if columns are missing from tables, e.g. 2 and 3 state models
   df = pd.concat(data, axis=0).reset_index(drop=True).sort_values(
     'name', ignore_index=True, key=lambda col: col.str.lower())
 
   print(df.to_csv(index=False).rstrip())
+  print(f"Datasets: {len(np.unique(df['name']))}", file=sys.stderr)
 
 if __name__ == '__main__':
   main()
