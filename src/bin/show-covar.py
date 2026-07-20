@@ -59,6 +59,20 @@ def main():
   df = pd.concat(data, axis=0).reset_index(drop=True).sort_values(
     'name', ignore_index=True, key=lambda col: col.str.lower())
 
+  df.drop_duplicates(inplace=True)
+
+  # Fill missing log-likelihood
+  df3 = df[pd.notna(df["log_likelihood"])]
+  for index, row in df.iterrows():
+    if pd.isna(row['log_likelihood']):
+      df2 = df3[
+        (df3["name"] == row["name"]) &
+        (df3["D0"] == row["D0"]) & (df3["F0"] == row["F0"]) &
+        (df3["D1"] == row["D1"]) & (df3["F1"] == row["F1"])
+      ]
+      if len(df2):
+        df.loc[index, "log_likelihood"] = df2.iloc[0]["log_likelihood"]
+
   print(df.to_csv(index=False).rstrip())
   print(f"Datasets: {len(np.unique(df['name']))}", file=sys.stderr)
 
