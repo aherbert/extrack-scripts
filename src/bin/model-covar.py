@@ -164,7 +164,7 @@ def process_tracks(path, args):
   started = time.time()
 
   # https://lmfit.github.io/lmfit-py/fitting.html#lmfit.minimizer.MinimizerResult
-  uvars = extrack.tracking.param_vars(all_tracks=fit_tracks,
+  uvars, ll = extrack.tracking.param_vars(all_tracks=fit_tracks,
     dt=args.dt, # Time in between frames
     params=params,
     nb_states=args.nb_states, # Number of states
@@ -196,7 +196,7 @@ def process_tracks(path, args):
     logging.info('Failed to compute variances')
     return
 
-  logging.info('Parameters:\n' +
+  logging.info(f'LL {ll} : Parameters:\n' +
     '\n'.join(f'  {k}={repr(v)}' for k, v in uvars.items()))
 
   # save model params to a CSV using append.
@@ -212,6 +212,7 @@ def process_tracks(path, args):
     'rtol': args.rtol,
     'forward': args.forward,
     'time': rt,
+     KEY_LOG_LIKELIHOOD: ll,
   }
   for k, v in uvars.items():
     data[k] = v.n
