@@ -136,6 +136,21 @@ def process_tracks(path, args):
     for k in range(args.fit_lengths[0], args.fit_lengths[1] + 1)]
   fit_tracks = dict((k, all_tracks[k]) for k in wanted_keys if k in all_tracks)
 
+  # Optional parameters to estimate
+  wanted = None
+  if len(args.params):
+    wanted = set(args.params)
+    available = set([k for k, v in params.items() if v.vary])
+    if not available.issuperset(wanted):
+      wanted -= available
+      msg = f'Unavailable parameters: {wanted} from {available}'
+      logging.warn(msg)
+      raise Exception(msg)
+    for v in params.values():
+      v.vary = False
+    for k in wanted:
+      params[k].vary = True
+
   # Working arguments
   args2 = vars(args).copy()
   del args2['file']
@@ -184,6 +199,13 @@ def process_tracks(path, args):
       if est_precision is not None:
         # This is clipped to the bounds
         params['LocErr'].value = est_precision
+
+      # Optional parameters to fit
+      if wanted:
+        for v in params.values():
+          v.vary = False
+        for k in wanted:
+          params[k].vary = True
 
     start_time = time.time()
     # https://lmfit.github.io/lmfit-py/fitting.html#lmfit.minimizer.MinimizerResult
@@ -444,6 +466,9 @@ def parse_args():
     help='estimated: use the estimated f and d; '\
       'random: randomly initialise f and d; '\
       'best: use best model (default: %(default)s)')
+  group.add_argument('--params', nargs='+', metavar='name',
+    default=[],
+    help='parameters to estimate (default: all)')
 
   group = parser.add_argument_group('Fitting')
   group.add_argument('--fit-lengths', dest='fit_lengths', nargs=2, type=int,
